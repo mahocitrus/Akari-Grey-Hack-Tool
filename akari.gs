@@ -244,7 +244,7 @@ if not metaxploit then metaxploit = include_lib("/lib/metaxploit.so")
 if not metaxploit then exit("Error: Missing metaxploit library")
 
 crypto = include_lib(current_path + "/crypto.so")
-if not crypto then crypto = include_lib("/lib/metaxploit.so")
+if not crypto then crypto = include_lib("/lib/crypto.so")
 if not crypto then print("Warning: Missing crypto library")
 
 rshellAPI = getRshellAPI(metaxploit)
