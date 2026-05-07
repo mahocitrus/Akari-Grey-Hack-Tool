@@ -1,5 +1,5 @@
 //@author AkazaAkari
-//@version indev 0.0.5
+//@version indev 0.0.6
 //@name smartNPChackingTool
 //@description
 // Try to get you root shell on any npc public ip and local ip you input.
@@ -10,7 +10,8 @@
 // 0.0.2 rewrote nmap
 // 0.0.3 added open rshell support, wipe system no longer deletes anything, added local escalate, minor bug fixes.
 // 0.0.4 added metaxploit.rshell_server support.
-// 0.0.5 added local password generator when cloud api is invalid.
+// 0.0.5 added local password generator when pre-computed hashes api is invalid.
+// 0.0.6 keep exploits in memory when exploits api is invalid
 
 if params and params.len < 2 then exit(program_path.split("/")[-1] + " [public_ip] [local_ip]")
 
@@ -48,6 +49,7 @@ getCloudExploitAPI = function(metaxploit) //rocketorbit's exploit database api.
     api.connection = remoteShell
     api.metaxploit = metaxploit
     api.interface = get_custom_object
+    api.exploits = {}
 
     //all api method start
     api.testConnection = function(self) //demo method.
@@ -89,11 +91,17 @@ getCloudExploitAPI = function(metaxploit) //rocketorbit's exploit database api.
                 ret.memorys[memory] = ret.memorys[memory] + [value]
             end for
         end for
+        if not hasIndex(self.exploits, ret.lib_name) then self.exploits[ret.lib_name] = {}
+        self.exploits[ret.lib_name][ret.version] = ret
         return ret
     end function
     api.queryExploit = function(self, libName, libVersion)
         clearInterface(self.interface)
-        if typeof(self.connection) != "shell" then return null
+        if typeof(self.connection) != "shell" then
+            if not hasIndex(self.exploits, libName) then return null
+            if not hasIndex(self.exploits[libName], libVersion) then return null
+            return self.exploits[libName][libVersion]
+        end if
         self.interface.ret = null
         self.interface.args = ["queryExploit", libName, libVersion]
         self.connection.launch("/interfaces/exploitAPI")
